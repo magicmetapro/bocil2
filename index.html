@@ -40,24 +40,16 @@
       justify-content: center;
     }
 
-    .slot.circle {
+    .slot.circle, .shape.circle {
       border-radius: 50%;
     }
 
-    .slot.square {
+    .slot.square, .shape.square {
       border-radius: 10px;
     }
 
     .shape {
       cursor: grab;
-    }
-
-    .shape.circle {
-      border-radius: 50%;
-    }
-
-    .shape.square {
-      border-radius: 10px;
     }
 
     .shape.triangle {
@@ -86,6 +78,13 @@
     .hidden {
       display: none;
     }
+
+    #nextLevelMsg {
+      font-size: 1.2rem;
+      color: green;
+      font-weight: bold;
+      margin-top: 20px;
+    }
   </style>
 </head>
 <body>
@@ -94,27 +93,52 @@
 
   <div class="container" id="slotsContainer"></div>
   <div class="container" id="shapesContainer"></div>
+  <div id="nextLevelMsg"></div>
 
   <script>
-    const level = 1; // Bisa dikembangkan untuk level selanjutnya
-    const shapesData = [
-      { shape: 'circle', color: 'purple' },
-      { shape: 'triangle', color: 'blue' },
-      { shape: 'square', color: 'blue' },
-    ];
+    let level = 1;
+
+    const allShapes = ['circle', 'square', 'triangle'];
+    const allColors = ['purple', 'blue', 'red', 'green', 'orange', 'deeppink', 'gold'];
 
     const slotsContainer = document.getElementById("slotsContainer");
     const shapesContainer = document.getElementById("shapesContainer");
+    const levelLabel = document.getElementById("level");
+    const nextLevelMsg = document.getElementById("nextLevelMsg");
+
+    function shuffle(arr) {
+      return arr.sort(() => 0.5 - Math.random());
+    }
+
+    function randomShapeData(count) {
+      const data = [];
+      const used = new Set();
+      while (data.length < count) {
+        const shape = allShapes[Math.floor(Math.random() * allShapes.length)];
+        const color = allColors[Math.floor(Math.random() * allColors.length)];
+        const key = `${shape}-${color}`;
+        if (!used.has(key)) {
+          used.add(key);
+          data.push({ shape, color });
+        }
+      }
+      return data;
+    }
 
     function setupLevel() {
-      shapesContainer.innerHTML = "";
+      nextLevelMsg.textContent = "";
+      levelLabel.textContent = `LEVEL ${level}`;
       slotsContainer.innerHTML = "";
+      shapesContainer.innerHTML = "";
 
-      // Shuffle bentuk
-      const shuffled = shapesData.sort(() => 0.5 - Math.random());
+      const count = Math.min(level + 2, 10);
+      const shapeData = randomShapeData(count);
+      const shuffled = shuffle([...shapeData]);
 
-      // Generate slot target
-      shapesData.forEach(({ shape, color }) => {
+      let correctMatches = 0;
+
+      // Buat slots
+      shapeData.forEach(({ shape, color }) => {
         const slot = document.createElement("div");
         slot.className = `slot ${shape}`;
         slot.setAttribute("data-shape", shape);
@@ -122,29 +146,50 @@
 
         if (shape === "triangle") {
           slot.style.borderBottom = `70px solid ${color}`;
-          slot.style.borderLeft = "40px solid transparent";
-          slot.style.borderRight = "40px solid transparent";
         } else {
           slot.style.borderColor = color;
         }
 
         slot.addEventListener("dragover", (e) => e.preventDefault());
-        slot.addEventListener("drop", handleDrop);
+
+        slot.addEventListener("drop", function (e) {
+          const shapeId = e.dataTransfer.getData("text/plain");
+          const draggedEl = document.getElementById(shapeId);
+          const draggedShape = draggedEl.getAttribute("data-shape");
+          const draggedColor = draggedEl.getAttribute("data-color");
+
+          if (shape === draggedShape && color === draggedColor) {
+            this.classList.add("success");
+            this.appendChild(draggedEl);
+            draggedEl.setAttribute("draggable", "false");
+            correctMatches++;
+
+            if (correctMatches === count) {
+              nextLevelMsg.textContent = "✅ Hebat! Naik ke Level Berikutnya...";
+              setTimeout(() => {
+                level++;
+                setupLevel();
+              }, 1500);
+            }
+          }
+        });
+
         slotsContainer.appendChild(slot);
       });
 
-      // Generate bentuk
+      // Buat shapes
       shuffled.forEach(({ shape, color }, idx) => {
         const shapeEl = document.createElement("div");
-        shapeEl.className = `shape ${shape}`;
-        shapeEl.setAttribute("draggable", "true");
+        shapeEl.id = `shape-${idx}`;
         shapeEl.setAttribute("data-shape", shape);
         shapeEl.setAttribute("data-color", color);
-        shapeEl.id = `shape-${idx}`;
+        shapeEl.setAttribute("draggable", "true");
 
         if (shape === "triangle") {
+          shapeEl.className = `shape triangle`;
           shapeEl.style.borderBottomColor = color;
         } else {
+          shapeEl.className = `shape ${shape}`;
           shapeEl.style.backgroundColor = color;
         }
 
@@ -154,21 +199,6 @@
 
         shapesContainer.appendChild(shapeEl);
       });
-    }
-
-    function handleDrop(e) {
-      const shapeId = e.dataTransfer.getData("text/plain");
-      const draggedEl = document.getElementById(shapeId);
-      const slotShape = this.getAttribute("data-shape");
-      const slotColor = this.getAttribute("data-color");
-      const draggedShape = draggedEl.getAttribute("data-shape");
-      const draggedColor = draggedEl.getAttribute("data-color");
-
-      if (slotShape === draggedShape && slotColor === draggedColor) {
-        this.classList.add("success");
-        this.appendChild(draggedEl);
-        draggedEl.setAttribute("draggable", "false");
-      }
     }
 
     setupLevel();
