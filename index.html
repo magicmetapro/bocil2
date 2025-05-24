@@ -95,6 +95,7 @@
 
   <script>
     let level = 1;
+    let correctMatches = 0; // Tambahan variabel global untuk touch
 
     const allShapes = ['circle', 'square', 'triangle'];
     const allColors = ['purple', 'blue', 'red', 'green', 'orange', 'deeppink', 'gold'];
@@ -143,12 +144,11 @@
       levelLabel.textContent = `LEVEL ${level}`;
       slotsContainer.innerHTML = "";
       shapesContainer.innerHTML = "";
+      correctMatches = 0; // reset tiap level
 
       const count = Math.min(level + 2, 10);
       const shapeData = randomShapeData(count);
       const shuffled = shuffle([...shapeData]);
-
-      let correctMatches = 0;
 
       // Buat slot
       shapeData.forEach(({ shape, color }) => {
@@ -182,6 +182,7 @@
               setTimeout(() => {
                 level++;
                 setupLevel();
+                enableTouchDragAndDrop(); // panggil ulang untuk shapes baru
               }, 1500);
             }
           }
@@ -214,7 +215,102 @@
       });
     }
 
+    // Fungsi untuk mengaktifkan drag & drop via touch di HP
+    function enableTouchDragAndDrop() {
+      let draggedEl = null;
+      let offsetX = 0;
+      let offsetY = 0;
+
+      shapesContainer.querySelectorAll('.shape').forEach(shapeEl => {
+        // reset posisi jika sebelumnya di-drag via touch
+        shapeEl.style.position = 'static';
+        shapeEl.style.left = '';
+        shapeEl.style.top = '';
+        shapeEl.style.zIndex = '';
+
+        shapeEl.addEventListener('touchstart', function (e) {
+          draggedEl = this;
+          const touch = e.touches[0];
+          const rect = this.getBoundingClientRect();
+          offsetX = touch.clientX - rect.left;
+          offsetY = touch.clientY - rect.top;
+          draggedEl.style.position = 'absolute';
+          draggedEl.style.zIndex = 1000;
+        });
+
+        shapeEl.addEventListener('touchmove', function (e) {
+          if (!draggedEl) return;
+          e.preventDefault(); // mencegah scroll saat drag
+
+          const touch = e.touches[0];
+          draggedEl.style.left = (touch.clientX - offsetX) + 'px';
+          draggedEl.style.top = (touch.clientY - offsetY) + 'px';
+        });
+
+        shapeEl.addEventListener('touchend', function (e) {
+          if (!draggedEl) return;
+
+          const touch = e.changedTouches[0];
+          const dropX = touch.clientX;
+          const dropY = touch.clientY;
+
+          let droppedOnSlot = null;
+          document.querySelectorAll('.slot').forEach(slot => {
+            const rect = slot.getBoundingClientRect();
+            if (
+              dropX >= rect.left && dropX <= rect.right &&
+              dropY >= rect.top && dropY <= rect.bottom
+            ) {
+              droppedOnSlot = slot;
+            }
+          });
+
+          if (droppedOnSlot) {
+            const slotShape = droppedOnSlot.getAttribute('data-shape');
+            const slotColor = droppedOnSlot.getAttribute('data-color');
+            const draggedShape = draggedEl.getAttribute('data-shape');
+            const draggedColor = draggedEl.getAttribute('data-color');
+
+            if (slotShape === draggedShape && slotColor === draggedColor) {
+              droppedOnSlot.classList.add("success");
+              droppedOnSlot.appendChild(draggedEl);
+              draggedEl.style.position = 'static';
+              draggedEl.style.left = '';
+              draggedEl.style.top = '';
+              draggedEl.style.zIndex = '';
+              draggedEl.setAttribute('draggable', 'false');
+
+              correctMatches++;
+              if (correctMatches === document.querySelectorAll('.slot').length) {
+                nextLevelMsg.textContent = "✅ Hebat! Naik ke Level Berikutnya...";
+                setTimeout(() => {
+                  level++;
+                  setupLevel();
+                  enableTouchDragAndDrop();
+                }, 1500);
+              }
+            } else {
+              // Jika salah, kembalikan posisi
+              draggedEl.style.position = 'static';
+              draggedEl.style.left = '';
+              draggedEl.style.top = '';
+              draggedEl.style.zIndex = '';
+            }
+          } else {
+            // Tidak dijatuhkan di slot, kembalikan posisi
+            draggedEl.style.position = 'static';
+            draggedEl.style.left = '';
+            draggedEl.style.top = '';
+            draggedEl.style.zIndex = '';
+          }
+
+          draggedEl = null;
+        });
+      });
+    }
+
     setupLevel();
+    enableTouchDragAndDrop(); // Aktifkan drag via touch setelah setup
   </script>
 </body>
 </html>
