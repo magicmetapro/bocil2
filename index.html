@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE html> 
 <html lang="id">
 <head>
   <meta charset="UTF-8">
@@ -73,6 +73,45 @@
       left: 0;
     }
 
+    /* Bentuk Bintang */
+    .shape.star, .slot.star {
+      position: relative;
+      display: inline-block;
+      width: 80px;
+      height: 80px;
+      background: none;
+    }
+    .shape.star svg, .slot.star svg {
+      width: 80px;
+      height: 80px;
+    }
+
+    /* Bentuk Belah Ketupat (Diamond) */
+    .shape.diamond, .slot.diamond {
+      width: 80px;
+      height: 80px;
+      background-color: transparent;
+      transform: rotate(45deg);
+      border-radius: 10px;
+      box-sizing: border-box;
+    }
+
+    .shape.diamond {
+      cursor: grab;
+    }
+
+    /* Bentuk Pentagon */
+    .shape.pentagon, .slot.pentagon {
+      position: relative;
+      width: 80px;
+      height: 80px;
+      background: none;
+    }
+    .shape.pentagon svg, .slot.pentagon svg {
+      width: 80px;
+      height: 80px;
+    }
+
     .success {
       border: 3px solid limegreen !important;
     }
@@ -96,7 +135,8 @@
   <script>
     let level = 1;
 
-    const allShapes = ['circle', 'square', 'triangle'];
+    // Tambahkan bentuk baru di array allShapes
+    const allShapes = ['circle', 'square', 'triangle', 'star', 'diamond', 'pentagon'];
     const allColors = ['purple', 'blue', 'red', 'green', 'orange', 'deeppink', 'gold'];
 
     const slotsContainer = document.getElementById("slotsContainer");
@@ -138,6 +178,38 @@
       return svg;
     }
 
+    function createStarSVG(color) {
+      const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      svg.setAttribute("width", "80");
+      svg.setAttribute("height", "80");
+      svg.setAttribute("viewBox", "0 0 100 100");
+
+      const polygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+      polygon.setAttribute("points", "50,5 61,39 98,39 68,59 79,91 50,70 21,91 32,59 2,39 39,39");
+      polygon.setAttribute("fill", "none");
+      polygon.setAttribute("stroke", color);
+      polygon.setAttribute("stroke-width", "4");
+      svg.appendChild(polygon);
+
+      return svg;
+    }
+
+    function createPentagonSVG(color) {
+      const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      svg.setAttribute("width", "80");
+      svg.setAttribute("height", "80");
+      svg.setAttribute("viewBox", "0 0 100 100");
+
+      const polygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+      polygon.setAttribute("points", "50,10 90,35 73,85 27,85 10,35");
+      polygon.setAttribute("fill", "none");
+      polygon.setAttribute("stroke", color);
+      polygon.setAttribute("stroke-width", "4");
+      svg.appendChild(polygon);
+
+      return svg;
+    }
+
     function setupLevel() {
       nextLevelMsg.textContent = "";
       levelLabel.textContent = `LEVEL ${level}`;
@@ -160,6 +232,17 @@
         if (shape === "triangle") {
           const svg = createTriangleSVG(color);
           slot.appendChild(svg);
+        } else if (shape === "star") {
+          const svg = createStarSVG(color);
+          slot.appendChild(svg);
+        } else if (shape === "pentagon") {
+          const svg = createPentagonSVG(color);
+          slot.appendChild(svg);
+        } else if (shape === "diamond") {
+          slot.style.borderColor = color;
+          slot.style.borderWidth = "3px";
+          slot.style.borderStyle = "solid";
+          // diamond pakai transform rotasi 45deg di CSS, border sudah diatur di CSS
         } else {
           slot.style.borderColor = color;
         }
@@ -201,6 +284,17 @@
         if (shape === "triangle") {
           shapeEl.className = "shape triangle";
           shapeEl.style.borderBottomColor = color;
+        } else if (shape === "star") {
+          shapeEl.className = "shape star";
+          const svg = createStarSVG(color);
+          shapeEl.appendChild(svg);
+        } else if (shape === "pentagon") {
+          shapeEl.className = "shape pentagon";
+          const svg = createPentagonSVG(color);
+          shapeEl.appendChild(svg);
+        } else if (shape === "diamond") {
+          shapeEl.className = "shape diamond";
+          shapeEl.style.backgroundColor = color;
         } else {
           shapeEl.className = `shape ${shape}`;
           shapeEl.style.backgroundColor = color;
