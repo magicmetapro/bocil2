@@ -6,26 +6,25 @@
   <style>
     body {
       font-family: 'Comic Sans MS', cursive;
-      background: #e6f9f9;
+      background: linear-gradient(to right, #e0f7fa, #e8f5e9);
       text-align: center;
       padding: 30px;
     }
 
     h1 {
-      font-size: 2rem;
       color: teal;
     }
 
     #level {
-      margin: 10px 0;
       font-weight: bold;
+      margin-bottom: 20px;
     }
 
     .container {
       display: flex;
       justify-content: center;
-      gap: 30px;
       flex-wrap: wrap;
+      gap: 30px;
       margin-top: 30px;
     }
 
@@ -62,34 +61,20 @@
     }
 
     .slot.triangle {
-      background: none;
-      border: none;
-      position: relative;
       width: 80px;
       height: 80px;
-      clip-path: polygon(50% 10%, 0% 90%, 100% 90%);
       background-color: transparent;
+      position: relative;
     }
 
-    .slot.triangle::after {
-      content: "";
+    .slot.triangle svg {
       position: absolute;
-      inset: 0;
-      clip-path: polygon(50% 10%, 0% 90%, 100% 90%);
-      border: 3px dashed gray;
-    }
-
-    .slot.triangle[data-color]::after {
-      border-color: var(--triangle-color, gray);
+      top: 0;
+      left: 0;
     }
 
     .success {
-      outline: 3px solid limegreen;
-      border: none;
-    }
-
-    .slot.triangle.correct::after {
-      border-color: limegreen !important;
+      border: 3px solid limegreen !important;
     }
 
     #nextLevelMsg {
@@ -138,6 +123,21 @@
       return data;
     }
 
+    function createTriangleSVG(color) {
+      const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      svg.setAttribute("width", "80");
+      svg.setAttribute("height", "80");
+
+      const polygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+      polygon.setAttribute("points", "40,10 10,70 70,70");
+      polygon.setAttribute("fill", "none");
+      polygon.setAttribute("stroke", color);
+      polygon.setAttribute("stroke-width", "4");
+      svg.appendChild(polygon);
+
+      return svg;
+    }
+
     function setupLevel() {
       nextLevelMsg.textContent = "";
       levelLabel.textContent = `LEVEL ${level}`;
@@ -150,21 +150,21 @@
 
       let correctMatches = 0;
 
-      // SLOT
+      // Buat slot
       shapeData.forEach(({ shape, color }) => {
         const slot = document.createElement("div");
         slot.className = `slot ${shape}`;
         slot.setAttribute("data-shape", shape);
         slot.setAttribute("data-color", color);
 
-        if (shape !== "triangle") {
-          slot.style.borderColor = color;
+        if (shape === "triangle") {
+          const svg = createTriangleSVG(color);
+          slot.appendChild(svg);
         } else {
-          slot.style.setProperty('--triangle-color', color);
+          slot.style.borderColor = color;
         }
 
         slot.addEventListener("dragover", (e) => e.preventDefault());
-
         slot.addEventListener("drop", function (e) {
           const shapeId = e.dataTransfer.getData("text/plain");
           const draggedEl = document.getElementById(shapeId);
@@ -172,18 +172,8 @@
           const draggedColor = draggedEl.getAttribute("data-color");
 
           if (shape === draggedShape && color === draggedColor) {
-            if (shape !== "triangle") {
-              this.classList.add("success");
-              this.appendChild(draggedEl);
-            } else {
-              this.classList.add("correct");
-              draggedEl.style.pointerEvents = "none";
-              draggedEl.style.position = "absolute";
-              draggedEl.style.top = this.offsetTop + "px";
-              draggedEl.style.left = this.offsetLeft + "px";
-              document.body.appendChild(draggedEl);
-            }
-
+            this.classList.add("success");
+            this.appendChild(draggedEl);
             draggedEl.setAttribute("draggable", "false");
             correctMatches++;
 
@@ -200,7 +190,7 @@
         slotsContainer.appendChild(slot);
       });
 
-      // SHAPE
+      // Buat shapes
       shuffled.forEach(({ shape, color }, idx) => {
         const shapeEl = document.createElement("div");
         shapeEl.id = `shape-${idx}`;
@@ -209,7 +199,7 @@
         shapeEl.setAttribute("draggable", "true");
 
         if (shape === "triangle") {
-          shapeEl.className = `shape triangle`;
+          shapeEl.className = "shape triangle";
           shapeEl.style.borderBottomColor = color;
         } else {
           shapeEl.className = `shape ${shape}`;
