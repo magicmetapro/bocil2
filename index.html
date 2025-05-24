@@ -62,22 +62,34 @@
     }
 
     .slot.triangle {
-      width: 0;
-      height: 0;
-      border-left: 40px solid transparent;
-      border-right: 40px solid transparent;
-      border-bottom: 70px dashed gray;
       background: none;
+      border: none;
       position: relative;
+      width: 80px;
+      height: 80px;
+      clip-path: polygon(50% 10%, 0% 90%, 100% 90%);
+      background-color: transparent;
     }
 
-    .slot.triangle.correct {
-      border-bottom: 70px solid limegreen !important;
+    .slot.triangle::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      clip-path: polygon(50% 10%, 0% 90%, 100% 90%);
+      border: 3px dashed gray;
+    }
+
+    .slot.triangle[data-color]::after {
+      border-color: var(--triangle-color, gray);
     }
 
     .success {
       outline: 3px solid limegreen;
       border: none;
+    }
+
+    .slot.triangle.correct::after {
+      border-color: limegreen !important;
     }
 
     #nextLevelMsg {
@@ -148,7 +160,7 @@
         if (shape !== "triangle") {
           slot.style.borderColor = color;
         } else {
-          slot.style.borderBottomColor = color;
+          slot.style.setProperty('--triangle-color', color);
         }
 
         slot.addEventListener("dragover", (e) => e.preventDefault());
