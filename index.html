@@ -1,9 +1,8 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Cocokkan Warna & Bentuk</title>
+  <meta charset="UTF-8">
+  <title>Game Warna & Bentuk</title>
   <style>
     body {
       font-family: 'Comic Sans MS', cursive;
@@ -15,7 +14,6 @@
     h1 {
       font-size: 2rem;
       color: teal;
-      text-transform: uppercase;
     }
 
     #level {
@@ -61,34 +59,27 @@
       border-left: 40px solid transparent;
       border-right: 40px solid transparent;
       border-bottom: 70px solid blue;
-      background: none;
     }
 
-    .slot.triangle {
+    .slot.triangle svg {
       width: 80px;
       height: 80px;
-      background: none;
-      clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
-      border: 3px dashed gray;
     }
 
-    .slot.triangle.colored {
-      border-color: inherit;
+    .slot.triangle polygon {
+      fill: none;
+      stroke: gray;
+      stroke-width: 4;
     }
 
     .success {
       border: 3px solid limegreen !important;
     }
 
-    .hidden {
-      display: none;
-    }
-
     #nextLevelMsg {
-      font-size: 1.2rem;
-      color: green;
-      font-weight: bold;
       margin-top: 20px;
+      font-weight: bold;
+      color: green;
     }
   </style>
 </head>
@@ -143,20 +134,23 @@
       let correctMatches = 0;
 
       // Buat slots
-      shapeData.forEach(({ shape, color }) => {
+      shapeData.forEach(({ shape, color }, i) => {
         const slot = document.createElement("div");
         slot.className = `slot ${shape}`;
         slot.setAttribute("data-shape", shape);
         slot.setAttribute("data-color", color);
 
-        if (shape === "triangle") {
-          slot.classList.add("colored");
-          slot.style.borderColor = color;
+        if (shape === 'triangle') {
+          slot.innerHTML = `
+            <svg viewBox="0 0 100 100">
+              <polygon points="50,10 10,90 90,90" stroke="${color}" fill="none"/>
+            </svg>
+          `;
         } else {
           slot.style.borderColor = color;
         }
 
-        slot.addEventListener("dragover", (e) => e.preventDefault());
+        slot.addEventListener("dragover", e => e.preventDefault());
 
         slot.addEventListener("drop", function (e) {
           const shapeId = e.dataTransfer.getData("text/plain");
@@ -169,7 +163,6 @@
             this.appendChild(draggedEl);
             draggedEl.setAttribute("draggable", "false");
             correctMatches++;
-
             if (correctMatches === count) {
               nextLevelMsg.textContent = "✅ Hebat! Naik ke Level Berikutnya...";
               setTimeout(() => {
@@ -184,22 +177,22 @@
       });
 
       // Buat shapes
-      shuffled.forEach(({ shape, color }, idx) => {
+      shuffled.forEach(({ shape, color }, i) => {
         const shapeEl = document.createElement("div");
-        shapeEl.id = `shape-${idx}`;
+        shapeEl.id = `shape-${i}`;
         shapeEl.setAttribute("data-shape", shape);
         shapeEl.setAttribute("data-color", color);
         shapeEl.setAttribute("draggable", "true");
 
         if (shape === "triangle") {
-          shapeEl.className = `shape triangle`;
+          shapeEl.className = "shape triangle";
           shapeEl.style.borderBottomColor = color;
         } else {
           shapeEl.className = `shape ${shape}`;
           shapeEl.style.backgroundColor = color;
         }
 
-        shapeEl.addEventListener("dragstart", (e) => {
+        shapeEl.addEventListener("dragstart", e => {
           e.dataTransfer.setData("text/plain", shapeEl.id);
         });
 
