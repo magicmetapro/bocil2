@@ -1,219 +1,220 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
   <title>Cocokkan Warna & Bentuk</title>
   <style>
     body {
-      font-family: 'Comic Sans MS', cursive, sans-serif;
-      background: #e8fef8;
+      font-family: 'Comic Sans MS', cursive;
+      background: linear-gradient(to right, #e0f7fa, #e8f5e9);
       text-align: center;
-      padding: 20px;
+      padding: 30px;
     }
+
     h1 {
-      font-size: 2rem;
       color: teal;
-      margin-bottom: 10px;
     }
+
     #level {
-      font-size: 1.2rem;
+      font-weight: bold;
       margin-bottom: 20px;
     }
-    .board {
+
+    .container {
       display: flex;
       justify-content: center;
       flex-wrap: wrap;
-      gap: 20px;
-      margin-bottom: 30px;
+      gap: 30px;
+      margin-top: 30px;
     }
-    .slot {
+
+    .slot, .shape {
       width: 80px;
       height: 80px;
-      border: 3px dashed #aaa;
       display: flex;
       align-items: center;
       justify-content: center;
-      border-radius: 10px;
     }
-    .shape {
-      width: 80px;
-      height: 80px;
-      cursor: grab;
+
+    .slot {
+      border: 3px dashed #aaa;
     }
-    .circle {
+
+    .slot.circle, .shape.circle {
       border-radius: 50%;
     }
-    .square {
-      border-radius: 15px;
+
+    .slot.square, .shape.square {
+      border-radius: 10px;
     }
-    .triangle {
+
+    .shape {
+      cursor: grab;
+    }
+
+    .shape.triangle {
       width: 0;
       height: 0;
       border-left: 40px solid transparent;
       border-right: 40px solid transparent;
-      border-bottom: 80px solid;
-      background: none;
+      border-bottom: 70px solid blue;
     }
 
-    /* SLOT SEGITIGA FIX */
     .slot.triangle {
-      border: none;
+      width: 80px;
+      height: 80px;
       background-color: transparent;
       position: relative;
     }
 
-    .triangle-slot-icon {
+    .slot.triangle svg {
       position: absolute;
       top: 0;
       left: 0;
     }
 
-    .hidden {
-      display: none;
+    .success {
+      border: 3px solid limegreen !important;
     }
-    #nextBtn {
-      padding: 10px 20px;
-      font-size: 1rem;
-      background-color: teal;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-    }
-    #nextBtn:disabled {
-      background-color: #ccc;
-      cursor: not-allowed;
+
+    #nextLevelMsg {
+      font-size: 1.2rem;
+      color: green;
+      font-weight: bold;
+      margin-top: 20px;
     }
   </style>
 </head>
 <body>
   <h1>🎨 Cocokkan Warna & Bentuk 🎨</h1>
   <div id="level">LEVEL 1</div>
-  <div class="board" id="slots"></div>
-  <div class="board" id="shapes"></div>
-  <button id="nextBtn" disabled>Level Berikutnya ➡️</button>
 
-<script>
-const shapesList = [
-  { shape: "circle", color: "orange" },
-  { shape: "square", color: "deeppink" },
-  { shape: "triangle", color: "green" },
-  { shape: "triangle", color: "purple" },
-  { shape: "triangle", color: "blue" },
-  { shape: "triangle", color: "orange" }
-];
+  <div class="container" id="slotsContainer"></div>
+  <div class="container" id="shapesContainer"></div>
+  <div id="nextLevelMsg"></div>
 
-let level = 1;
-let correct = 0;
+  <script>
+    let level = 1;
 
-const slots = document.getElementById("slots");
-const shapes = document.getElementById("shapes");
-const levelText = document.getElementById("level");
-const nextBtn = document.getElementById("nextBtn");
+    const allShapes = ['circle', 'square', 'triangle'];
+    const allColors = ['purple', 'blue', 'red', 'green', 'orange', 'deeppink', 'gold'];
 
-function shuffle(array) {
-  return array.sort(() => Math.random() - 0.5);
-}
+    const slotsContainer = document.getElementById("slotsContainer");
+    const shapesContainer = document.getElementById("shapesContainer");
+    const levelLabel = document.getElementById("level");
+    const nextLevelMsg = document.getElementById("nextLevelMsg");
 
-function createShapeElement(type, color, draggable = false) {
-  const div = document.createElement("div");
-
-  if (type === "triangle") {
-    div.classList.add("shape", "triangle");
-    div.style.borderBottomColor = color;
-  } else {
-    div.classList.add("shape", type);
-    div.style.backgroundColor = color;
-  }
-
-  if (draggable) {
-    div.setAttribute("draggable", true);
-    div.dataset.shape = type;
-    div.dataset.color = color;
-    div.addEventListener("dragstart", dragStart);
-  }
-
-  return div;
-}
-
-function dragStart(e) {
-  e.dataTransfer.setData("shape", e.target.dataset.shape);
-  e.dataTransfer.setData("color", e.target.dataset.color);
-}
-
-function allowDrop(e) {
-  e.preventDefault();
-}
-
-function drop(e) {
-  e.preventDefault();
-  const shape = e.dataTransfer.getData("shape");
-  const color = e.dataTransfer.getData("color");
-
-  const expectedShape = e.target.dataset.shape;
-  const expectedColor = e.target.dataset.color;
-
-  if (shape === expectedShape && color === expectedColor) {
-    const shapeElement = createShapeElement(shape, color);
-    shapeElement.style.cursor = "default";
-    e.target.appendChild(shapeElement);
-    e.target.removeEventListener("drop", drop);
-    e.target.removeEventListener("dragover", allowDrop);
-    correct++;
-
-    if (correct === level) {
-      nextBtn.disabled = false;
-    }
-  }
-}
-
-function loadLevel() {
-  correct = 0;
-  levelText.textContent = `LEVEL ${level}`;
-  nextBtn.disabled = true;
-  slots.innerHTML = "";
-  shapes.innerHTML = "";
-
-  const selectedShapes = shuffle([...shapesList]).slice(0, level);
-
-  selectedShapes.forEach(item => {
-    const slot = document.createElement("div");
-    slot.classList.add("slot");
-    slot.dataset.shape = item.shape;
-    slot.dataset.color = item.color;
-
-    if (item.shape === "triangle") {
-      slot.classList.add("triangle");
-
-      const triangle = document.createElement("div");
-      triangle.classList.add("triangle");
-      triangle.classList.add("triangle-slot-icon");
-      triangle.style.borderBottomColor = item.color;
-
-      slot.appendChild(triangle);
-    } else {
-      slot.style.borderColor = item.color;
-      slot.style.borderStyle = "dashed";
+    function shuffle(arr) {
+      return arr.sort(() => 0.5 - Math.random());
     }
 
-    slot.addEventListener("dragover", allowDrop);
-    slot.addEventListener("drop", drop);
-    slots.appendChild(slot);
-  });
+    function randomShapeData(count) {
+      const data = [];
+      const used = new Set();
+      while (data.length < count) {
+        const shape = allShapes[Math.floor(Math.random() * allShapes.length)];
+        const color = allColors[Math.floor(Math.random() * allColors.length)];
+        const key = `${shape}-${color}`;
+        if (!used.has(key)) {
+          used.add(key);
+          data.push({ shape, color });
+        }
+      }
+      return data;
+    }
 
-  shuffle(selectedShapes).forEach(item => {
-    const shape = createShapeElement(item.shape, item.color, true);
-    shapes.appendChild(shape);
-  });
-}
+    function createTriangleSVG(color) {
+      const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      svg.setAttribute("width", "80");
+      svg.setAttribute("height", "80");
 
-nextBtn.addEventListener("click", () => {
-  level++;
-  loadLevel();
-});
+      const polygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+      polygon.setAttribute("points", "40,10 10,70 70,70");
+      polygon.setAttribute("fill", "none");
+      polygon.setAttribute("stroke", color);
+      polygon.setAttribute("stroke-width", "4");
+      svg.appendChild(polygon);
 
-loadLevel();
-</script>
+      return svg;
+    }
+
+    function setupLevel() {
+      nextLevelMsg.textContent = "";
+      levelLabel.textContent = `LEVEL ${level}`;
+      slotsContainer.innerHTML = "";
+      shapesContainer.innerHTML = "";
+
+      const count = Math.min(level + 2, 10);
+      const shapeData = randomShapeData(count);
+      const shuffled = shuffle([...shapeData]);
+
+      let correctMatches = 0;
+
+      // Buat slot
+      shapeData.forEach(({ shape, color }) => {
+        const slot = document.createElement("div");
+        slot.className = `slot ${shape}`;
+        slot.setAttribute("data-shape", shape);
+        slot.setAttribute("data-color", color);
+
+        if (shape === "triangle") {
+          const svg = createTriangleSVG(color);
+          slot.appendChild(svg);
+        } else {
+          slot.style.borderColor = color;
+        }
+
+        slot.addEventListener("dragover", (e) => e.preventDefault());
+        slot.addEventListener("drop", function (e) {
+          const shapeId = e.dataTransfer.getData("text/plain");
+          const draggedEl = document.getElementById(shapeId);
+          const draggedShape = draggedEl.getAttribute("data-shape");
+          const draggedColor = draggedEl.getAttribute("data-color");
+
+          if (shape === draggedShape && color === draggedColor) {
+            this.classList.add("success");
+            this.appendChild(draggedEl);
+            draggedEl.setAttribute("draggable", "false");
+            correctMatches++;
+
+            if (correctMatches === count) {
+              nextLevelMsg.textContent = "✅ Hebat! Naik ke Level Berikutnya...";
+              setTimeout(() => {
+                level++;
+                setupLevel();
+              }, 1500);
+            }
+          }
+        });
+
+        slotsContainer.appendChild(slot);
+      });
+
+      // Buat shapes
+      shuffled.forEach(({ shape, color }, idx) => {
+        const shapeEl = document.createElement("div");
+        shapeEl.id = `shape-${idx}`;
+        shapeEl.setAttribute("data-shape", shape);
+        shapeEl.setAttribute("data-color", color);
+        shapeEl.setAttribute("draggable", "true");
+
+        if (shape === "triangle") {
+          shapeEl.className = "shape triangle";
+          shapeEl.style.borderBottomColor = color;
+        } else {
+          shapeEl.className = `shape ${shape}`;
+          shapeEl.style.backgroundColor = color;
+        }
+
+        shapeEl.addEventListener("dragstart", (e) => {
+          e.dataTransfer.setData("text/plain", shapeEl.id);
+        });
+
+        shapesContainer.appendChild(shapeEl);
+      });
+    }
+
+    setupLevel();
+  </script>
 </body>
 </html>
