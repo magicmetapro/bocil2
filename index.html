@@ -52,26 +52,32 @@
       cursor: grab;
     }
 
-    /* Persegi Panjang */
-    .slot.rectangle, .shape.rectangle {
-      border-radius: 10px;
-      width: 120px;
-      height: 60px;
-    }
+    /* Hilangkan style segitiga lama */
+    /* .shape.triangle {
+      width: 0;
+      height: 0;
+      border-left: 40px solid transparent;
+      border-right: 40px solid transparent;
+      border-bottom: 70px solid blue;
+    } */
 
-    /* Segi Lima dan Bintang menggunakan SVG di dalam div */
-    .slot.pentagon, .slot.star, .slot.love {
+    .slot.star {
       width: 80px;
       height: 80px;
+      background-color: transparent;
       position: relative;
-      background-color: transparent;
-      border: none;
     }
 
-    .shape.pentagon, .shape.star, .shape.love {
+    .slot.star svg {
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+
+    /* Tambah style untuk shape bintang */
+    .shape.star {
       width: 80px;
       height: 80px;
-      background-color: transparent;
       position: relative;
     }
 
@@ -98,8 +104,7 @@
   <script>
     let level = 1;
 
-    // Tambah bentuk baru di sini
-    const allShapes = ['circle', 'square', 'triangle', 'rectangle', 'pentagon', 'star', 'love'];
+    const allShapes = ['circle', 'square', 'star'];  // triangle diganti star
     const allColors = ['purple', 'blue', 'red', 'green', 'orange', 'deeppink', 'gold'];
 
     const slotsContainer = document.getElementById("slotsContainer");
@@ -126,65 +131,18 @@
       return data;
     }
 
-    // SVG pembentuk shape baru
-    function createTriangleSVG(color) {
-      const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-      svg.setAttribute("width", "80");
-      svg.setAttribute("height", "80");
-
-      const polygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
-      polygon.setAttribute("points", "40,10 10,70 70,70");
-      polygon.setAttribute("fill", "none");
-      polygon.setAttribute("stroke", color);
-      polygon.setAttribute("stroke-width", "4");
-      svg.appendChild(polygon);
-
-      return svg;
-    }
-
-    function createPentagonSVG(color) {
-      const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-      svg.setAttribute("width", "80");
-      svg.setAttribute("height", "80");
-
-      const polygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
-      polygon.setAttribute("points", "40,10 70,30 60,70 20,70 10,30");
-      polygon.setAttribute("fill", "none");
-      polygon.setAttribute("stroke", color);
-      polygon.setAttribute("stroke-width", "4");
-      svg.appendChild(polygon);
-
-      return svg;
-    }
-
     function createStarSVG(color) {
       const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
       svg.setAttribute("width", "80");
       svg.setAttribute("height", "80");
+      svg.setAttribute("viewBox", "0 0 100 100");
 
-      const starPoints = "40,10 47,30 68,30 52,45 58,65 40,53 22,65 28,45 12,30 33,30";
       const polygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
-      polygon.setAttribute("points", starPoints);
+      polygon.setAttribute("points", "50,5 61,39 98,39 67,59 79,91 50,70 21,91 33,59 2,39 39,39");
       polygon.setAttribute("fill", "none");
       polygon.setAttribute("stroke", color);
       polygon.setAttribute("stroke-width", "4");
       svg.appendChild(polygon);
-
-      return svg;
-    }
-
-    function createLoveSVG(color) {
-      const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-      svg.setAttribute("width", "80");
-      svg.setAttribute("height", "80");
-      svg.setAttribute("viewBox", "0 0 24 24");
-
-      const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-      path.setAttribute("d", "M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41 0.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z");
-      path.setAttribute("fill", "none");
-      path.setAttribute("stroke", color);
-      path.setAttribute("stroke-width", "2");
-      svg.appendChild(path);
 
       return svg;
     }
@@ -208,25 +166,10 @@
         slot.setAttribute("data-shape", shape);
         slot.setAttribute("data-color", color);
 
-        if (shape === "triangle") {
-          const svg = createTriangleSVG(color);
-          slot.appendChild(svg);
-        } else if (shape === "pentagon") {
-          const svg = createPentagonSVG(color);
-          slot.appendChild(svg);
-        } else if (shape === "star") {
+        if (shape === "star") {
           const svg = createStarSVG(color);
           slot.appendChild(svg);
-        } else if (shape === "love") {
-          const svg = createLoveSVG(color);
-          slot.appendChild(svg);
-        } else if (shape === "rectangle") {
-          slot.style.borderColor = color;
-          slot.style.width = "120px";
-          slot.style.height = "60px";
-          slot.style.borderRadius = "10px";
         } else {
-          // circle, square
           slot.style.borderColor = color;
         }
 
@@ -264,29 +207,19 @@
         shapeEl.setAttribute("data-color", color);
         shapeEl.setAttribute("draggable", "true");
 
-        if (shape === "triangle") {
-          shapeEl.className = "shape triangle";
-          shapeEl.style.borderBottomColor = color;
-        } else if (shape === "pentagon") {
-          shapeEl.className = "shape pentagon";
-          const svg = createPentagonSVG(color);
-          shapeEl.appendChild(svg);
-        } else if (shape === "star") {
+        if (shape === "star") {
           shapeEl.className = "shape star";
-          const svg = createStarSVG(color);
-          shapeEl.appendChild(svg);
-        } else if (shape === "love") {
-          shapeEl.className = "shape love";
-          const svg = createLoveSVG(color);
-          shapeEl.appendChild(svg);
-        } else if (shape === "rectangle") {
-          shapeEl.className = "shape rectangle";
-          shapeEl.style.backgroundColor = color;
-          shapeEl.style.width = "120px";
-          shapeEl.style.height = "60px";
-          shapeEl.style.borderRadius = "10px";
+          // Kita buat background transparan dan letakkan svg star di dalamnya
+          shapeEl.style.backgroundColor = "transparent";
+
+          // Buat svg bintang berisi fill warna
+          const starSvg = createStarSVG(color);
+          starSvg.querySelector("polygon").setAttribute("fill", color);
+          starSvg.querySelector("polygon").setAttribute("stroke", "black");
+          starSvg.querySelector("polygon").setAttribute("stroke-width", "2");
+
+          shapeEl.appendChild(starSvg);
         } else {
-          // circle, square
           shapeEl.className = `shape ${shape}`;
           shapeEl.style.backgroundColor = color;
         }
