@@ -3,101 +3,84 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Game Warna & Bentuk</title>
+  <title>Cocokkan Warna & Bentuk</title>
   <style>
     body {
-      margin: 0;
       font-family: 'Comic Sans MS', cursive, sans-serif;
-      background: linear-gradient(to bottom right, #e0f7fa, #e8f5e9);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 20px;
-      min-height: 100vh;
-      text-transform: uppercase;
+      background: linear-gradient(to right, #e0f7fa, #e8f5e9);
+      text-align: center;
+      padding: 30px;
     }
 
     h1 {
-      color: #00796b;
       font-size: 2rem;
-      margin-bottom: 10px;
-      text-align: center;
+      color: teal;
+      text-transform: uppercase;
     }
 
-    .level {
-      font-size: 1.2rem;
-      margin-bottom: 20px;
-      color: #555;
+    #level {
+      margin: 10px 0;
+      font-weight: bold;
     }
 
-    .board {
+    .container {
       display: flex;
-      flex-wrap: wrap;
       justify-content: center;
+      flex-wrap: wrap;
       gap: 30px;
+      margin-top: 30px;
     }
 
-    .shape {
+    .slot, .shape {
       width: 80px;
       height: 80px;
-      cursor: grab;
-      transition: transform 0.3s ease;
-    }
-
-    .shape.success {
-      animation: bounce 0.5s ease;
-    }
-
-    @keyframes bounce {
-      0%   { transform: scale(1); }
-      50%  { transform: scale(1.2); }
-      100% { transform: scale(1); }
-    }
-
-    .slot {
-      width: 100px;
-      height: 100px;
-      border: 3px dashed #bbb;
+      border: 3px dashed #aaa;
       display: flex;
       align-items: center;
       justify-content: center;
-      border-radius: 10px;
     }
 
-    .circle {
+    .slot.circle {
       border-radius: 50%;
     }
 
-    .square {
+    .slot.square {
       border-radius: 10px;
     }
 
-    .triangle {
+    .shape {
+      cursor: grab;
+    }
+
+    .shape.circle {
+      border-radius: 50%;
+    }
+
+    .shape.square {
+      border-radius: 10px;
+    }
+
+    .shape.triangle {
       width: 0;
       height: 0;
       border-left: 40px solid transparent;
       border-right: 40px solid transparent;
-      border-bottom: 70px solid;
-      background: none !important;
+      border-bottom: 70px solid blue;
+      background: none;
     }
 
-    .message {
-      margin-top: 20px;
-      font-size: 1.3rem;
-      color: green;
-      font-weight: bold;
-      text-align: center;
+    .slot.triangle {
+      width: 0;
+      height: 0;
+      border-left: 40px solid transparent;
+      border-right: 40px solid transparent;
+      border-bottom: 70px solid gray;
+      background: none;
+      border-radius: 0;
     }
 
-    .btn-next {
-      margin-top: 15px;
-      padding: 10px 20px;
-      background: #00796b;
-      color: white;
-      font-size: 1rem;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
+    .success {
+      border: 3px solid limegreen !important;
     }
 
     .hidden {
@@ -107,128 +90,85 @@
 </head>
 <body>
   <h1>🎨 Cocokkan Warna & Bentuk 🎨</h1>
-  <div class="level" id="levelLabel">Level 1</div>
+  <div id="level">LEVEL 1</div>
 
-  <div class="board" id="slotsContainer"></div>
-  <br><br>
-  <div class="board" id="shapesContainer"></div>
-
-  <div class="message" id="message"></div>
-  <button class="btn-next hidden" id="nextBtn">Lanjut Level ➡️</button>
-
-  <!-- Suara -->
-  <audio id="successSound" src="https://cdn.pixabay.com/audio/2022/03/15/audio_246d635a9f.mp3" preload="auto"></audio>
+  <div class="container" id="slotsContainer"></div>
+  <div class="container" id="shapesContainer"></div>
 
   <script>
-    const colors = ["red", "blue", "green", "orange", "purple", "yellow"];
-    const shapesList = ["circle", "square", "triangle"];
-    let currentLevel = 1;
-    const maxLevel = 5;
+    const level = 1; // Bisa dikembangkan untuk level selanjutnya
+    const shapesData = [
+      { shape: 'circle', color: 'purple' },
+      { shape: 'triangle', color: 'blue' },
+      { shape: 'square', color: 'blue' },
+    ];
 
     const slotsContainer = document.getElementById("slotsContainer");
     const shapesContainer = document.getElementById("shapesContainer");
-    const message = document.getElementById("message");
-    const levelLabel = document.getElementById("levelLabel");
-    const nextBtn = document.getElementById("nextBtn");
-    const successSound = document.getElementById("successSound");
-
-    let draggedItem = null;
-    let matchedCount = 0;
-
-    nextBtn.addEventListener("click", () => {
-      currentLevel++;
-      if (currentLevel <= maxLevel) {
-        setupLevel();
-      }
-    });
 
     function setupLevel() {
-      levelLabel.textContent = "Level " + currentLevel;
-      slotsContainer.innerHTML = "";
       shapesContainer.innerHTML = "";
-      message.textContent = "";
-      nextBtn.classList.add("hidden");
-      matchedCount = 0;
+      slotsContainer.innerHTML = "";
 
-      const itemCount = Math.min(currentLevel + 2, shapesList.length * colors.length);
-      const used = [];
+      // Shuffle bentuk
+      const shuffled = shapesData.sort(() => 0.5 - Math.random());
 
-      const items = [];
-
-      while (items.length < itemCount) {
-        const shape = shapesList[Math.floor(Math.random() * shapesList.length)];
-        const color = colors[Math.floor(Math.random() * colors.length)];
-        const key = shape + "-" + color;
-        if (!used.includes(key)) {
-          used.push(key);
-          items.push({ shape, color });
-        }
-      }
-
-      // Buat slot target
-      items.forEach(({ shape, color }) => {
+      // Generate slot target
+      shapesData.forEach(({ shape, color }) => {
         const slot = document.createElement("div");
-        slot.classList.add("slot");
+        slot.className = `slot ${shape}`;
         slot.setAttribute("data-shape", shape);
         slot.setAttribute("data-color", color);
+
+        if (shape === "triangle") {
+          slot.style.borderBottom = `70px solid ${color}`;
+          slot.style.borderLeft = "40px solid transparent";
+          slot.style.borderRight = "40px solid transparent";
+        } else {
+          slot.style.borderColor = color;
+        }
+
+        slot.addEventListener("dragover", (e) => e.preventDefault());
+        slot.addEventListener("drop", handleDrop);
         slotsContainer.appendChild(slot);
       });
 
-      // Buat bentuk draggable
-      const shuffledItems = [...items].sort(() => 0.5 - Math.random());
-      shuffledItems.forEach(({ shape, color }) => {
-        const el = document.createElement("div");
-        el.classList.add("shape", shape);
-        el.setAttribute("data-shape", shape);
-        el.setAttribute("data-color", color);
-        el.setAttribute("draggable", "true");
+      // Generate bentuk
+      shuffled.forEach(({ shape, color }, idx) => {
+        const shapeEl = document.createElement("div");
+        shapeEl.className = `shape ${shape}`;
+        shapeEl.setAttribute("draggable", "true");
+        shapeEl.setAttribute("data-shape", shape);
+        shapeEl.setAttribute("data-color", color);
+        shapeEl.id = `shape-${idx}`;
 
         if (shape === "triangle") {
-          el.style.borderBottomColor = color;
+          shapeEl.style.borderBottomColor = color;
         } else {
-          el.style.backgroundColor = color;
+          shapeEl.style.backgroundColor = color;
         }
 
-        el.addEventListener("dragstart", () => {
-          draggedItem = el;
+        shapeEl.addEventListener("dragstart", (e) => {
+          e.dataTransfer.setData("text/plain", shapeEl.id);
         });
 
-        shapesContainer.appendChild(el);
+        shapesContainer.appendChild(shapeEl);
       });
+    }
 
-      // Tambah event drop ke slot
-      document.querySelectorAll(".slot").forEach(slot => {
-        slot.addEventListener("dragover", e => e.preventDefault());
+    function handleDrop(e) {
+      const shapeId = e.dataTransfer.getData("text/plain");
+      const draggedEl = document.getElementById(shapeId);
+      const slotShape = this.getAttribute("data-shape");
+      const slotColor = this.getAttribute("data-color");
+      const draggedShape = draggedEl.getAttribute("data-shape");
+      const draggedColor = draggedEl.getAttribute("data-color");
 
-        slot.addEventListener("drop", () => {
-          if (!draggedItem) return;
-
-          const shapeMatch = slot.getAttribute("data-shape") === draggedItem.getAttribute("data-shape");
-          const colorMatch = slot.getAttribute("data-color") === draggedItem.getAttribute("data-color");
-
-          if (shapeMatch && colorMatch) {
-            slot.appendChild(draggedItem);
-            draggedItem.setAttribute("draggable", "false");
-            draggedItem.classList.add("success");
-            successSound.currentTime = 0;
-            successSound.play();
-            matchedCount++;
-
-            if (matchedCount === itemCount) {
-              message.textContent = "✅ Hebat! Semua cocok!";
-              if (currentLevel < maxLevel) {
-                nextBtn.classList.remove("hidden");
-              } else {
-                message.textContent += " 🎉 Kamu menyelesaikan semua level!";
-              }
-            }
-          } else {
-            alert("❌ Coba lagi! Bentuk atau warna salah.");
-          }
-
-          draggedItem = null;
-        });
-      });
+      if (slotShape === draggedShape && slotColor === draggedColor) {
+        this.classList.add("success");
+        this.appendChild(draggedEl);
+        draggedEl.setAttribute("draggable", "false");
+      }
     }
 
     setupLevel();
