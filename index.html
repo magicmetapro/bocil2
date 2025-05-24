@@ -34,51 +34,16 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      position: relative;
     }
 
     .slot {
       border: 3px dashed #aaa;
     }
 
-    .slot.circle, .shape.circle {
-      border-radius: 50%;
-    }
-
-    .slot.square, .shape.square {
-      border-radius: 10px;
-    }
-
     .shape {
       cursor: grab;
-    }
-
-    /* Hilangkan style segitiga lama */
-    /* .shape.triangle {
-      width: 0;
-      height: 0;
-      border-left: 40px solid transparent;
-      border-right: 40px solid transparent;
-      border-bottom: 70px solid blue;
-    } */
-
-    .slot.star {
-      width: 80px;
-      height: 80px;
       background-color: transparent;
-      position: relative;
-    }
-
-    .slot.star svg {
-      position: absolute;
-      top: 0;
-      left: 0;
-    }
-
-    /* Tambah style untuk shape bintang */
-    .shape.star {
-      width: 80px;
-      height: 80px;
-      position: relative;
     }
 
     .success {
@@ -91,10 +56,15 @@
       font-weight: bold;
       margin-top: 20px;
     }
+
+    svg {
+      width: 60px;
+      height: 60px;
+    }
   </style>
 </head>
 <body>
-  <h1>🎨 Cocokkan Warna & Bentuk 🎨</h1>
+  <h1>🎨 Cocokkan Warna & Simbol 🎨</h1>
   <div id="level">LEVEL 1</div>
 
   <div class="container" id="slotsContainer"></div>
@@ -104,7 +74,9 @@
   <script>
     let level = 1;
 
-    const allShapes = ['circle', 'square', 'star'];  // triangle diganti star
+    // Ganti allShapes jadi simbol hewan, kendaraan, buah
+    const allShapes = ['cat', 'bird', 'fish', 'car', 'plane', 'bike', 'apple', 'banana', 'grape'];
+
     const allColors = ['purple', 'blue', 'red', 'green', 'orange', 'deeppink', 'gold'];
 
     const slotsContainer = document.getElementById("slotsContainer");
@@ -131,18 +103,95 @@
       return data;
     }
 
-    function createStarSVG(color) {
-      const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-      svg.setAttribute("width", "80");
-      svg.setAttribute("height", "80");
-      svg.setAttribute("viewBox", "0 0 100 100");
+    // Buat SVG simbol berdasarkan tipe shape & warna stroke/fill
+    function createSymbolSVG(shape, color, filled = false) {
+      const svgNS = "http://www.w3.org/2000/svg";
+      const svg = document.createElementNS(svgNS, "svg");
+      svg.setAttribute("viewBox", "0 0 64 64");
 
-      const polygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
-      polygon.setAttribute("points", "50,5 61,39 98,39 67,59 79,91 50,70 21,91 33,59 2,39 39,39");
-      polygon.setAttribute("fill", "none");
-      polygon.setAttribute("stroke", color);
-      polygon.setAttribute("stroke-width", "4");
-      svg.appendChild(polygon);
+      let path;
+
+      switch(shape) {
+        // Hewan
+        case 'cat':
+          path = document.createElementNS(svgNS, "path");
+          path.setAttribute("d", "M32 2 L24 14 L16 14 L10 30 L18 32 L14 42 L20 40 L22 48 L30 44 L38 48 L40 40 L46 42 L42 32 L50 30 L44 14 L36 14 Z");
+          break;
+        case 'bird':
+          path = document.createElementNS(svgNS, "path");
+          path.setAttribute("d", "M2 30 Q16 10 28 24 Q40 8 54 28 Q50 36 60 38 Q40 44 28 40 Q14 52 2 44 Z");
+          break;
+        case 'fish':
+          path = document.createElementNS(svgNS, "path");
+          path.setAttribute("d", "M10 32 Q20 10 38 22 Q54 10 54 42 Q38 34 20 54 Q10 40 10 32 Z");
+          break;
+
+        // Kendaraan
+        case 'car':
+          path = document.createElementNS(svgNS, "rect");
+          path.setAttribute("x", "10");
+          path.setAttribute("y", "24");
+          path.setAttribute("width", "44");
+          path.setAttribute("height", "18");
+          path.setAttribute("rx", "6");
+          path.setAttribute("ry", "6");
+          break;
+        case 'plane':
+          path = document.createElementNS(svgNS, "polygon");
+          path.setAttribute("points", "32,2 42,24 62,26 44,34 48,54 32,44 16,54 20,34 2,26 22,24");
+          break;
+        case 'bike':
+          path = document.createElementNS(svgNS, "circle");
+          path.setAttribute("cx", "20");
+          path.setAttribute("cy", "44");
+          path.setAttribute("r", "10");
+          break;
+
+        // Buah
+        case 'apple':
+          path = document.createElementNS(svgNS, "circle");
+          path.setAttribute("cx", "32");
+          path.setAttribute("cy", "32");
+          path.setAttribute("r", "20");
+          break;
+        case 'banana':
+          path = document.createElementNS(svgNS, "path");
+          path.setAttribute("d", "M22 12 Q38 10 44 28 Q50 44 40 52 Q28 54 22 40 Q18 30 22 12 Z");
+          break;
+        case 'grape':
+          path = document.createElementNS(svgNS, "circle");
+          // Untuk anggur, bikin cluster 7 lingkaran kecil
+          const group = document.createElementNS(svgNS, "g");
+          const coords = [
+            [32, 20], [24, 28], [40, 28], [18, 38], [32, 38], [46, 38], [32, 50]
+          ];
+          coords.forEach(([cx, cy]) => {
+            const c = document.createElementNS(svgNS, "circle");
+            c.setAttribute("cx", cx);
+            c.setAttribute("cy", cy);
+            c.setAttribute("r", "6");
+            c.setAttribute("fill", filled ? color : "none");
+            c.setAttribute("stroke", color);
+            c.setAttribute("stroke-width", "2");
+            group.appendChild(c);
+          });
+          svg.appendChild(group);
+          path = null;
+          break;
+      }
+
+      if (path) {
+        if (filled) {
+          path.setAttribute("fill", color);
+          path.setAttribute("stroke", "black");
+          path.setAttribute("stroke-width", "2");
+        } else {
+          path.setAttribute("fill", "none");
+          path.setAttribute("stroke", color);
+          path.setAttribute("stroke-width", "3");
+        }
+        svg.appendChild(path);
+      }
 
       return svg;
     }
@@ -153,25 +202,21 @@
       slotsContainer.innerHTML = "";
       shapesContainer.innerHTML = "";
 
-      const count = Math.min(level + 2, 10);
+      const count = Math.min(level + 2, 9);
       const shapeData = randomShapeData(count);
       const shuffled = shuffle([...shapeData]);
 
       let correctMatches = 0;
 
-      // Buat slot
+      // Buat slot (outline simbol)
       shapeData.forEach(({ shape, color }) => {
         const slot = document.createElement("div");
         slot.className = `slot ${shape}`;
         slot.setAttribute("data-shape", shape);
         slot.setAttribute("data-color", color);
 
-        if (shape === "star") {
-          const svg = createStarSVG(color);
-          slot.appendChild(svg);
-        } else {
-          slot.style.borderColor = color;
-        }
+        const svg = createSymbolSVG(shape, color, false);
+        slot.appendChild(svg);
 
         slot.addEventListener("dragover", (e) => e.preventDefault());
         slot.addEventListener("drop", function (e) {
@@ -182,6 +227,7 @@
 
           if (shape === draggedShape && color === draggedColor) {
             this.classList.add("success");
+            this.innerHTML = ""; // Hapus slot svg outline
             this.appendChild(draggedEl);
             draggedEl.setAttribute("draggable", "false");
             correctMatches++;
@@ -199,30 +245,17 @@
         slotsContainer.appendChild(slot);
       });
 
-      // Buat shapes
+      // Buat shapes (filled simbol)
       shuffled.forEach(({ shape, color }, idx) => {
         const shapeEl = document.createElement("div");
         shapeEl.id = `shape-${idx}`;
         shapeEl.setAttribute("data-shape", shape);
         shapeEl.setAttribute("data-color", color);
         shapeEl.setAttribute("draggable", "true");
+        shapeEl.className = "shape";
 
-        if (shape === "star") {
-          shapeEl.className = "shape star";
-          // Kita buat background transparan dan letakkan svg star di dalamnya
-          shapeEl.style.backgroundColor = "transparent";
-
-          // Buat svg bintang berisi fill warna
-          const starSvg = createStarSVG(color);
-          starSvg.querySelector("polygon").setAttribute("fill", color);
-          starSvg.querySelector("polygon").setAttribute("stroke", "black");
-          starSvg.querySelector("polygon").setAttribute("stroke-width", "2");
-
-          shapeEl.appendChild(starSvg);
-        } else {
-          shapeEl.className = `shape ${shape}`;
-          shapeEl.style.backgroundColor = color;
-        }
+        const svg = createSymbolSVG(shape, color, true);
+        shapeEl.appendChild(svg);
 
         shapeEl.addEventListener("dragstart", (e) => {
           e.dataTransfer.setData("text/plain", shapeEl.id);
